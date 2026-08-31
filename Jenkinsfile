@@ -36,6 +36,7 @@ pipeline {
                     # Membungkus file dari Workspace Jenkins menjadi zip/tar
                     # --exclude mencegah file yang tidak perlu ikut terupload
                     tar -czf deploy.tar.gz \\
+                        --exclude='deploy.tar.gz' \\
                         --exclude='.git' \\
                         --exclude='.github' \\
                         --exclude='node_modules' \\
