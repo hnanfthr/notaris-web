@@ -64,21 +64,7 @@ pipeline {
                     echo "Menjalankan Composer dan Artisan di Hostinger..."
                     
                     # SSH masuk ke Hostinger dan jalankan perintah
-                    ssh -p ${HOSTINGER_PORT} ${HOSTINGER_USER}@${HOSTINGER_IP} << 'EOF'
-                        cd ${TARGET_DIR}
-                        
-                        # Install dependencies PHP yang baru
-                        # (Pastikan composer sudah ada di Hostinger, defaultnya sudah ada)
-                        composer install --no-dev --optimize-autoloader
-                        
-                        # Refresh cache Laravel
-                        php artisan config:cache
-                        php artisan route:cache
-                        php artisan view:cache
-                        
-                        # Jika ada migrasi database (Hati-hati untuk production)
-                        # php artisan migrate --force
-                    EOF
+                    ssh -p \${HOSTINGER_PORT} \${HOSTINGER_USER}@\${HOSTINGER_IP} "cd \${TARGET_DIR} && composer install --no-dev --optimize-autoloader && php artisan config:cache && php artisan route:cache && php artisan view:cache"
                     """
                 }
             }
