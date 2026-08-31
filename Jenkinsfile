@@ -23,7 +23,7 @@ pipeline {
             }
         }
         
-        stage('Deploy to Hostinger (Rsync)') {
+        stage('Deploy to Hostinger (SCP)') {
             steps {
                 // Menggunakan plugin SSH Agent untuk otentikasi
                 sshagent (credentials: ["${SSH_CRED_ID}"]) {
@@ -32,20 +32,25 @@ pipeline {
                     mkdir -p ~/.ssh
                     ssh-keyscan -p ${HOSTINGER_PORT} ${HOSTINGER_IP} >> ~/.ssh/known_hosts
                     
-                    echo "Mulai mengirim file ke Hostinger..."
-                    
-                    # Rsync file dari Workspace Jenkins ke Hostinger
+                    echo "Mulai memaketkan file..."
+                    # Membungkus file dari Workspace Jenkins menjadi zip/tar
                     # --exclude mencegah file yang tidak perlu ikut terupload
-                    rsync -avze "ssh -p ${HOSTINGER_PORT}" \
-                        --exclude='.git' \
-                        --exclude='.github' \
-                        --exclude='node_modules' \
-                        --exclude='tests' \
-                        --exclude='.env' \
-                        --exclude='Jenkinsfile' \
-                        --exclude='docker-compose.yml' \
-                        --exclude='README.md' \
-                        ./ ${HOSTINGER_USER}@${HOSTINGER_IP}:${TARGET_DIR}
+                    tar -czf deploy.tar.gz \\
+                        --exclude='.git' \\
+                        --exclude='.github' \\
+                        --exclude='node_modules' \\
+                        --exclude='tests' \\
+                        --exclude='.env' \\
+                        --exclude='Jenkinsfile' \\
+                        --exclude='docker-compose.yml' \\
+                        --exclude='README.md' \\
+                        .
+                        
+                    echo "Mengirim file ke Hostinger..."
+                    scp -P \${HOSTINGER_PORT} deploy.tar.gz \${HOSTINGER_USER}@\${HOSTINGER_IP}:\${TARGET_DIR}
+                    
+                    echo "Mengekstrak file di Hostinger..."
+                    ssh -p \${HOSTINGER_PORT} \${HOSTINGER_USER}@\${HOSTINGER_IP} "cd \${TARGET_DIR} && tar -xzf deploy.tar.gz && rm deploy.tar.gz"
                     """
                 }
             }
